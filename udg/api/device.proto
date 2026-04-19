@@ -4,6 +4,11 @@ package udg;
 service DeviceGateway {
   rpc Execute(CommandRequest) returns (CommandResponse);
   rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+  rpc WriteSerial(SerialWriteRequest) returns (SerialWriteResponse);
+  rpc ReadSerial(SerialReadRequest) returns (SerialReadResponse);
+  rpc SetSerialConfig(SerialConfigRequest) returns (SerialConfigResponse);
+  rpc GetSerialConfig(SerialConfigRequest) returns (SerialConfigResponse);
+  rpc ListSerialPorts(ListSerialPortsRequest) returns (ListSerialPortsResponse);
 }
 
 message Command {
@@ -37,3 +42,50 @@ message Device {
 
 message ListDevicesRequest {}
 message ListDevicesResponse { repeated Device devices = 1; }
+
+// Serial messages
+message SerialWriteRequest {
+  string port = 1;
+  string data = 2;
+  bool read_response = 3;
+  string encoding = 4;
+}
+
+message SerialWriteResponse {
+  string status = 1;
+  string output = 2;
+  string error = 3;
+}
+
+message SerialReadRequest {
+  string port = 1;
+  int32 bytes = 2;
+}
+
+message SerialReadResponse {
+  string status = 1;
+  string output = 2;
+  string error = 3;
+}
+
+message SerialConfigRequest {
+  string port = 1;
+  int32 baudrate = 2;
+  string parity = 3;
+  int32 databits = 4;
+  int32 stopbits = 5;
+}
+
+message SerialConfigResponse {
+  string status = 1;
+  string output = 2;
+  string error = 3;
+}
+
+message SerialPort {
+  string port = 1;
+  string type = 2;
+}
+
+message ListSerialPortsRequest {}
+message ListSerialPortsResponse { repeated SerialPort ports = 1; }
