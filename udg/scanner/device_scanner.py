@@ -1,39 +1,31 @@
 import asyncio
 import json
-import subprocess
 from typing import Optional
 
 from udg.device.base import DeviceType
 from udg.device.manager import DeviceManager
 from udg.device.ios import IOSDevice
 from udg.device.android import AndroidDevice
-
-
-async def run_cmd(cmd: list[str]) -> tuple[int, str, str]:
-    proc = await asyncio.create_subprocess_exec(
-        *cmd, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE
-    )
-    stdout, stderr = await proc.communicate()
-    return proc.returncode, stdout.decode(), stderr.decode()
+from udg.utils.cmd import CmdRunner
 
 
 async def scan_ios_devices() -> list[dict]:
-    code, stdout, _ = await run_cmd(["ios", "list"])
-    if code != 0:
+    result = await CmdRunner("ios", "list").run()
+    if result.code != 0:
         return []
     try:
-        data = json.loads(stdout)
+        data = json.loads(result.stdout)
         return [{"udid": udid, "type": "ios"} for udid in data.get("deviceList", [])]
     except json.JSONDecodeError:
         return []
 
 
 async def scan_android_devices() -> list[dict]:
-    code, stdout, _ = await run_cmd(["adb", "devices"])
-    if code != 0:
+    result = await CmdRunner("adb", "devices").run()
+    if result.code != 0:
         return []
     devices = []
-    for line in stdout.strip().split("\n")[1:]:
+    for line in result.stdout.strip().split("\n")[1:]:
         parts = line.split("\t")
         if len(parts) >= 2 and parts[1] == "device":
             serial = parts[0]
