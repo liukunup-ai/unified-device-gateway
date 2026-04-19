@@ -15,6 +15,8 @@ udg.egg-info/entry_points.txt
 udg.egg-info/requires.txt
 udg.egg-info/top_level.txt
 udg/api/__init__.py
+udg/api/device_pb2.py
+udg/api/device_pb2_grpc.py
 udg/api/schemas.py
 udg/auth/__init__.py
 udg/auth/token.py
