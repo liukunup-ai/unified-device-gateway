@@ -1,22 +1,11 @@
-import os
-import platform
-from pathlib import Path
+import serial.tools.list_ports
 from typing import List
 
-def scan_serial_ports() -> List[str]:
+
+def scan_serial_ports() -> List[dict]:
     ports = []
-    system = platform.system()
-    
-    if system == "Linux":
-        for p in Path("/dev").glob("ttyUSB*"):
-            ports.append(str(p))
-        for p in Path("/dev").glob("ttyACM*"):
-            ports.append(str(p))
-    elif system == "Darwin":
-        for p in Path("/dev").glob("cu.*"):
-            ports.append(str(p))
-    elif system == "Windows":
-        import serial.tools.list_ports
-        ports = [p.device for p in serial.tools.list_ports.comports()]
-    
+    for p in serial.tools.list_ports.comports():
+        if "BLTH" in p.device or "Bluetooth" in p.device:
+            continue
+        ports.append({"port": p.device, "type": "serial"})
     return ports

@@ -116,14 +116,21 @@ def start():
 def list_devices():
     from udg.device.manager import get_device_manager
     from udg.scanner.device_scanner import scan_all_devices
+    from udg.scanner.serial_scanner import scan_serial_ports
     device_manager = get_device_manager()
     asyncio.run(scan_all_devices(device_manager))
     devices = asyncio.run(device_manager.list_devices())
-    if not devices:
-        click.echo("No devices found")
-        return
+    serial_ports = scan_serial_ports()
+
+    android_count = sum(1 for d in devices if d.device_type.value == "android")
+    ios_count = sum(1 for d in devices if d.device_type.value == "ios")
+    serial_count = len(serial_ports)
+    click.echo(f"Android: {android_count}, iOS: {ios_count}, Serial: {serial_count}")
+
     for d in devices:
         click.echo(f"- {d.device_id} {d.device_type.value} {d.status.value}")
+    for p in serial_ports:
+        click.echo(f"- {p['port']} serial offline")
 
 
 @click.group()
