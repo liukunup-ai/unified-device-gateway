@@ -29,6 +29,7 @@ udg/device/serial.py
 udg/executor/__init__.py
 udg/executor/runner.py
 udg/scanner/__init__.py
+udg/scanner/device_scanner.py
 udg/scanner/serial_scanner.py
 udg/server/__init__.py
 udg/server/app.py

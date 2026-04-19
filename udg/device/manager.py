@@ -5,6 +5,16 @@ from collections import defaultdict
 from udg.device.base import BaseDevice, DeviceInfo, DeviceType
 from udg.config import settings
 
+_device_manager_instance: Optional["DeviceManager"] = None
+
+
+def get_device_manager() -> "DeviceManager":
+    global _device_manager_instance
+    if _device_manager_instance is None:
+        _device_manager_instance = DeviceManager()
+    return _device_manager_instance
+
+
 class DeviceManager:
     def __init__(self):
         self._devices: dict[str, BaseDevice] = {}

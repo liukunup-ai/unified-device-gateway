@@ -16,7 +16,7 @@ UDG 是一个统一设备网关，通过 HTTP、gRPC、MCP 三种协议控制 iO
 | `udg version` | 显示版本 | `udg version` |
 | `udg token show` | 显示当前 Token | `udg token show` |
 | `udg token rotate` | 轮换 Token | `udg token rotate` |
-| `udg device-list` | 列出设备 | `udg device-list` |
+| `udg device list` | 列出设备 | `udg device list` |
 
 ### 1.2 规划中
 
@@ -46,26 +46,26 @@ UDG 是一个统一设备网关，通过 HTTP、gRPC、MCP 三种协议控制 iO
 | `/health/live` | GET | 存活检查 | 否 |
 | `/metrics` | GET | Prometheus 指标 | 否 |
 | `/routes` | GET | 查看所有路由 | 否 |
-| `/api/v1/devices` | GET | 列出设备 | Bearer Token |
-| `/api/v1/execute` | POST | 执行命令 | Bearer Token |
+| `/devices` | GET | 列出设备 | Bearer Token |
+| `/execute` | POST | 执行命令 | Bearer Token |
 | `/mcp` | SSE | MCP 协议端点 | 否 |
 
 ### 2.2 规划中
 
 | 端点 | 方法 | 说明 | 认证 | 优先级 |
 |------|------|------|------|--------|
-| `/api/v1/devices` | POST | 添加设备 | Bearer Token | P1 |
-| `/api/v1/devices/{id}` | DELETE | 删除设备 | Bearer Token | P1 |
-| `/api/v1/devices/{id}/connect` | POST | 连接设备 | Bearer Token | P1 |
-| `/api/v1/devices/{id}/disconnect` | POST | 断开设备 | Bearer Token | P1 |
-| `/api/v1/devices/{id}/screenshot` | GET | 截图 | Bearer Token | P2 |
-| `/api/v1/devices/{id}/execute` | POST | 单设备执行命令 | Bearer Token | P1 |
-| `/api/v1/devices/scan` | POST | 扫描设备 | Bearer Token | P2 |
-| `/api/v1/config` | GET | 获取配置 | Bearer Token | P2 |
-| `/api/v1/config` | PUT | 更新配置 | Bearer Token | P3 |
-| `/api/v1/tokens` | POST | 创建 Token | Bearer Token | P3 |
-| `/api/v1/tokens` | GET | 列出 Token | Bearer Token | P3 |
-| `/api/v1/tokens/{id}` | DELETE | 删除 Token | Bearer Token | P3 |
+| `/devices` | POST | 添加设备 | Bearer Token | P1 |
+| `/devices/{id}` | DELETE | 删除设备 | Bearer Token | P1 |
+| `/devices/{id}/connect` | POST | 连接设备 | Bearer Token | P1 |
+| `/devices/{id}/disconnect` | POST | 断开设备 | Bearer Token | P1 |
+| `/devices/{id}/screenshot` | GET | 截图 | Bearer Token | P2 |
+| `/devices/{id}/execute` | POST | 单设备执行命令 | Bearer Token | P1 |
+| `/devices/scan` | POST | 扫描设备 | Bearer Token | P2 |
+| `/config` | GET | 获取配置 | Bearer Token | P2 |
+| `/config` | PUT | 更新配置 | Bearer Token | P3 |
+| `/tokens` | POST | 创建 Token | Bearer Token | P3 |
+| `/tokens` | GET | 列出 Token | Bearer Token | P3 |
+| `/tokens/{id}` | DELETE | 删除 Token | Bearer Token | P3 |
 
 ---
 

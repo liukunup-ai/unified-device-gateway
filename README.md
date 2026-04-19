@@ -25,10 +25,7 @@ uv pip install udg
 udg start
 
 # Show current token
-udg token show
-
-# Rotate token
-udg token rotate
+cat ~/.udg/token
 
 # List devices
 udg device list
@@ -40,13 +37,13 @@ udg device list
 
 ```bash
 curl http://localhost:8080/health
-curl http://localhost:8080/api/v1/devices
+curl http://localhost:8080/devices
 ```
 
 ### gRPC
 
 ```bash
-grpcurl localhost:50000 list
+grpcurl localhost:50051 list
 ```
 
 ### MCP (Model Context Protocol)
@@ -129,7 +126,7 @@ Or connect to a running server:
 Environment variables:
 
 - `UDG_HTTP_PORT`: HTTP server port (default: 8080)
-- `UDG_GRPC_PORT`: gRPC server port (default: 50000)
+- `UDG_GRPC_PORT`: gRPC server port (default: 50051)
 - `UDG_TOKEN`: Auth token (generated if not set)
 - `UDG_MAX_CONNECTIONS`: Max device connections (default: 50)
 - `UDG_LOG_LEVEL`: Log level (default: INFO)

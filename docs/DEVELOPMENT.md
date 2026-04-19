@@ -138,8 +138,8 @@ Starting gRPC server on port 50051...
 | `/health/ready` | GET | 就绪检查 | 否 |
 | `/health/live` | GET | 存活检查 | 否 |
 | `/metrics` | GET | Prometheus 指标 | 否 |
-| `/api/v1/devices` | GET | 列出所有设备 | Bearer Token |
-| `/api/v1/execute` | POST | 执行命令 | Bearer Token |
+| `/devices` | GET | 列出所有设备 | Bearer Token |
+| `/execute` | POST | 执行命令 | Bearer Token |
 | `/mcp` | SSE | MCP 协议端点 | 否 |
 
 ### 查看所有接口
@@ -160,8 +160,8 @@ curl http://localhost:8080/routes
     {"path": "/health/ready", "method": "GET", "description": "就绪检查"},
     {"path": "/health/live", "method": "GET", "description": "存活检查"},
     {"path": "/metrics", "method": "GET", "description": "Prometheus 指标"},
-    {"path": "/api/v1/devices", "method": "GET", "description": "列出所有设备", "auth": true},
-    {"path": "/api/v1/execute", "method": "POST", "description": "批量执行命令", "auth": true},
+    {"path": "/devices", "method": "GET", "description": "列出所有设备", "auth": true},
+    {"path": "/execute", "method": "POST", "description": "批量执行命令", "auth": true},
     {"path": "/mcp", "method": "SSE", "description": "MCP 协议端点 (Server-Sent Events)"}
   ],
   "grpc_port": 50051
@@ -177,10 +177,6 @@ grpcurl -plaintext localhost:50051 list
 ### 获取 Token
 
 ```bash
-# 查看当前 token
-udg token show
-
-# Token 文件位置
 cat ~/.udg/token
 ```
 
@@ -190,13 +186,13 @@ cat ~/.udg/token
 # 健康检查
 curl http://localhost:8080/health
 
-# 获取设备列表 (需要替换 YOUR_TOKEN)
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-     http://localhost:8080/api/v1/devices
+# 获取设备列表
+curl -H "Authorization: Bearer $(cat ~/.udg/token)" \
+     http://localhost:8080/devices
 
-# 执行命令 (需要替换 YOUR_TOKEN)
+# 执行命令
 curl -X POST \
-     -H "Authorization: Bearer YOUR_TOKEN" \
+     -H "Authorization: Bearer $(cat ~/.udg/token)" \
      -H "Content-Type: application/json" \
      -d '{
        "commands": [
@@ -209,7 +205,7 @@ curl -X POST \
          }
        ]
      }' \
-     http://localhost:8080/api/v1/execute
+     http://localhost:8080/execute
 ```
 
 ### Python HTTP 客户端示例
@@ -229,14 +225,14 @@ async def debug_http():
 
         # 获取设备列表
         resp = await client.get(
-            f"{BASE_URL}/api/v1/devices",
+            f"{BASE_URL}/devices",
             headers={"Authorization": f"Bearer {TOKEN}"}
         )
         print(f"Devices: {resp.json()}")
 
         # 执行命令
         resp = await client.post(
-            f"{BASE_URL}/api/v1/execute",
+            f"{BASE_URL}/execute",
             headers={"Authorization": f"Bearer {TOKEN}"},
             json={
                 "commands": [{
