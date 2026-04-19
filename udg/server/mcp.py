@@ -4,6 +4,7 @@ MCP (Model Context Protocol) server implementation.
 Uses FastMCP SDK to expose device management tools via MCP protocol.
 """
 import json
+import re
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 from udg.device.base import DeviceType
@@ -181,8 +182,9 @@ async def serial_write(port: str, data: str, read_response: bool = False, encodi
     """
     from udg.api.schemas import Command
     from datetime import datetime
-    
-    device_id = f"serial-{port}"
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
     cmd = Command(
         id=f"mcp-{datetime.now().timestamp()}",
         device_id=device_id,
@@ -190,10 +192,10 @@ async def serial_write(port: str, data: str, read_response: bool = False, encodi
         params={"data": data, "read": read_response, "encoding": encoding},
         timeout_ms=5000
     )
-    
+
     results = await _executor.execute_batch([cmd])
     result = results[0]
-    
+
     return json.dumps({
         "id": result.id,
         "device_id": result.device_id,
@@ -219,8 +221,9 @@ async def serial_read(port: str, bytes_to_read: int = 1024) -> str:
     """
     from udg.api.schemas import Command
     from datetime import datetime
-    
-    device_id = f"serial-{port}"
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
     cmd = Command(
         id=f"mcp-{datetime.now().timestamp()}",
         device_id=device_id,
@@ -228,10 +231,10 @@ async def serial_read(port: str, bytes_to_read: int = 1024) -> str:
         params={"size": bytes_to_read},
         timeout_ms=5000
     )
-    
+
     results = await _executor.execute_batch([cmd])
     result = results[0]
-    
+
     return json.dumps({
         "id": result.id,
         "device_id": result.device_id,
@@ -260,8 +263,9 @@ async def serial_set_config(port: str, baudrate: int = 115200, parity: str = "N"
     """
     from udg.api.schemas import Command
     from datetime import datetime
-    
-    device_id = f"serial-{port}"
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
     cmd = Command(
         id=f"mcp-{datetime.now().timestamp()}",
         device_id=device_id,
@@ -269,10 +273,10 @@ async def serial_set_config(port: str, baudrate: int = 115200, parity: str = "N"
         params={"baudrate": baudrate, "parity": parity, "databits": databits, "stopbits": stopbits},
         timeout_ms=5000
     )
-    
+
     results = await _executor.execute_batch([cmd])
     result = results[0]
-    
+
     return json.dumps({
         "id": result.id,
         "device_id": result.device_id,
@@ -297,16 +301,17 @@ async def serial_get_config(port: str) -> str:
     """
     if _device_manager is None:
         return json.dumps({"error": "Device manager not initialized"})
-    
-    device_id = f"serial-{port}"
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
     device = await _device_manager.get_device(device_id)
     if not device:
         return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
-    
+
     from udg.device.serial import SerialDevice
     if not isinstance(device, SerialDevice):
         return json.dumps({"error": "Device is not a SerialDevice", "code": "INVALID_DEVICE_TYPE"})
-    
+
     return json.dumps({
         "device_id": device_id,
         "port": port,

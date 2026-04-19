@@ -1,5 +1,6 @@
 import grpc
 import asyncio
+import re
 from concurrent import futures
 from udg.api import device_pb2, device_pb2_grpc
 from udg.device.manager import DeviceManager
@@ -21,7 +22,8 @@ class DeviceGatewayServicer(device_pb2_grpc.DeviceGatewayServicer):
         return device_pb2.ListDevicesResponse(devices=[])
 
     def _get_or_create_serial_device(self, port: str) -> "SerialDevice":
-        device_id = f"serial-{port}"
+        safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+        device_id = f"serial-{safe_port}"
         existing = asyncio.run(self.device_manager.get_device(device_id))
         if existing and isinstance(existing, SerialDevice):
             return existing

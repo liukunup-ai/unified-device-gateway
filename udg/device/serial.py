@@ -2,16 +2,23 @@ import asyncio
 import base64
 import json
 import os
+import re
 from datetime import datetime, timezone
 import serial
 from typing import Optional
 from udg.device.base import BaseDevice, DeviceInfo
 
 
+def _sanitize_device_id(device_id: str) -> str:
+    """Sanitize device_id to prevent path traversal attacks."""
+    return re.sub(r'[^a-zA-Z0-9_-]', '_', device_id)
+
+
 def _get_log_file_path(device_id: str) -> str:
     log_dir = "/tmp/udg-serial-logs"
     os.makedirs(log_dir, exist_ok=True)
-    return os.path.join(log_dir, f"{device_id}.jsonl")
+    safe_device_id = _sanitize_device_id(device_id)
+    return os.path.join(log_dir, f"{safe_device_id}.jsonl")
 
 
 class SerialDevice(BaseDevice):
@@ -98,8 +105,8 @@ class SerialDevice(BaseDevice):
 
         result = await asyncio.to_thread(_sync_write)
 
-        data_str = data if encoding == "utf-8" else data
-        self._log_transaction("write", data_str, len(data_bytes))
+        data_to_log = data_bytes.decode("utf-8", errors="replace") if encoding == "base64" else data
+        await asyncio.to_thread(self._log_transaction, "write", data_to_log, len(data_bytes))
 
         if read_response:
             return {"status": "success", "output": result, "error": None}
@@ -123,12 +130,16 @@ class SerialDevice(BaseDevice):
     async def _config(self, params: dict) -> dict:
         if "baudrate" in params:
             self._baudrate = int(params["baudrate"])
+            self.info.metadata["baudrate"] = self._baudrate
         if "parity" in params:
             self._parity = params["parity"]
+            self.info.metadata["parity"] = self._parity
         if "databits" in params:
             self._databits = int(params["databits"])
+            self.info.metadata["databits"] = self._databits
         if "stopbits" in params:
             self._stopbits = int(params["stopbits"])
+            self.info.metadata["stopbits"] = self._stopbits
 
         await self.disconnect()
         await self.connect()

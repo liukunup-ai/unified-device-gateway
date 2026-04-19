@@ -11,7 +11,7 @@ from udg.server.mcp import mcp, init_mcp, get_mcp_app
 from udg.scanner.device_scanner import scan_all_devices
 from udg.scanner.serial_scanner import scan_serial_ports
 from datetime import datetime
-import urllib.parse
+import re
 
 device_manager = get_device_manager()
 executor = CommandExecutor(device_manager)
@@ -208,7 +208,8 @@ async def serial_command(request: Request, command: str, params: dict):
     port = body.get("port")
     if not port:
         return JSONResponse({"detail": "port required"}, status_code=400)
-    device_id = f"serial-{urllib.parse.quote(port, safe='')}"
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
     cmd = Command(
         id=f"http-{datetime.now().timestamp()}",
         device_id=device_id,
@@ -257,7 +258,8 @@ async def serial_config_get(request: Request):
     port = request.query_params.get("port")
     if not port:
         return JSONResponse({"detail": "port query parameter required"}, status_code=400)
-    device_id = f"serial-{urllib.parse.quote(port, safe='')}"
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
     device = await device_manager.get_device(device_id)
     if device:
         return {
