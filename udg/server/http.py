@@ -44,6 +44,21 @@ async def metrics(request: Request) -> JSONResponse:
     return JSONResponse(get_metrics())
 
 
+async def list_routes(request: Request) -> JSONResponse:
+    """返回所有可用路由"""
+    routes = [
+        {"path": "/routes", "method": "GET", "description": "返回所有可用路由"},
+        {"path": "/health", "method": "GET", "description": "健康检查"},
+        {"path": "/health/ready", "method": "GET", "description": "就绪检查"},
+        {"path": "/health/live", "method": "GET", "description": "存活检查"},
+        {"path": "/metrics", "method": "GET", "description": "Prometheus 指标"},
+        {"path": "/api/v1/devices", "method": "GET", "description": "列出所有设备", "auth": True},
+        {"path": "/api/v1/execute", "method": "POST", "description": "批量执行命令", "auth": True},
+        {"path": "/mcp", "method": "SSE", "description": "MCP 协议端点 (Server-Sent Events)"},
+    ]
+    return JSONResponse({"routes": routes, "grpc_port": 50051})
+
+
 async def execute(request: Request) -> JSONResponse:
     body = await request.json()
     auth_header = request.headers.get("authorization")
@@ -97,6 +112,7 @@ app = Starlette(
         Route("/health/ready", ready),
         Route("/health/live", live),
         Route("/metrics", metrics),
+        Route("/routes", list_routes),
         Route("/api/v1/execute", execute, methods=["POST"]),
         Route("/api/v1/devices", list_devices),
     ],

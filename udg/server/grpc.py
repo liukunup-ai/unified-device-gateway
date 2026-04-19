@@ -20,6 +20,6 @@ class DeviceGatewayServicer(device_pb2_grpc.DeviceGatewayServicer):
 def serve():
     server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
     device_pb2_grpc.add_DeviceGatewayServicer_to_server(DeviceGatewayServicer(), server)
-    server.add_insecure_port('[::]:50002')
+    server.add_insecure_port('[::]:50051')
     server.start()
     return server

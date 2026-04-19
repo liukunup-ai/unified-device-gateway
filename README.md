@@ -15,7 +15,7 @@ A Python library for unified device control via HTTP, gRPC, and MCP protocols.
 ## Installation
 
 ```bash
-pip install udg
+uv pip install udg
 ```
 
 ## Quick Start

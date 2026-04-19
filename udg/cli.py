@@ -20,15 +20,21 @@ def start():
     import asyncio
     asyncio.run(server_main())
 
-@cli.command()
-def token_show():
-    token = load_token(settings.token_file)
-    click.echo(f"Current token: {token[:8]}...")
+@click.group()
+def token():
+    pass
 
-@cli.command()
-def token_rotate():
+@token.command()
+def show():
+    t = load_token(settings.token_file)
+    click.echo(f"Current token: {t[:8]}...")
+
+@token.command()
+def rotate():
     new_token = rotate_token(settings.token_file)
     click.echo(f"New token: {new_token}")
+
+cli.add_command(token)
 
 @cli.command()
 def device_list():
