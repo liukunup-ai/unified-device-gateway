@@ -16,6 +16,9 @@ def version():
 @cli.command()
 def start():
     click.echo("Starting udg server...")
+    from udg.server.app import main as server_main
+    import asyncio
+    asyncio.run(server_main())
 
 @cli.command()
 def token_show():

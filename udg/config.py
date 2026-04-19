@@ -15,8 +15,8 @@ def _expand_path(path: str) -> Path:
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    http_port: int = Field(default=50001, validation_alias="UDG_HTTP_PORT")
-    grpc_port: int = Field(default=50002, validation_alias="UDG_GRPC_PORT")
+    http_port: int = Field(default=8080, validation_alias="UDG_HTTP_PORT")
+    grpc_port: int = Field(default=50000, validation_alias="UDG_GRPC_PORT")
     token: Optional[str] = Field(default=None, validation_alias="UDG_TOKEN")
     max_connections: int = Field(default=50, validation_alias="UDG_MAX_CONNECTIONS")
     command_timeout_ms: int = Field(default=60000, validation_alias="UDG_COMMAND_TIMEOUT_MS")
