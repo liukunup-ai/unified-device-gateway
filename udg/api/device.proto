@@ -1,0 +1,39 @@
+syntax = "proto3";
+package udg;
+
+service DeviceGateway {
+  rpc Execute(CommandRequest) returns (CommandResponse);
+  rpc ListDevices(ListDevicesRequest) returns (ListDevicesResponse);
+}
+
+message Command {
+  string id = 1;
+  string device_id = 2;
+  string command = 3;
+  map<string, string> params = 4;
+  int32 timeout_ms = 5;
+}
+
+message CommandRequest { repeated Command commands = 1; }
+
+message CommandResult {
+  string id = 1;
+  string device_id = 2;
+  string command = 3;
+  string status = 4;
+  string output = 5;
+  string error = 6;
+  string error_code = 7;
+  int32 execution_time_ms = 8;
+}
+
+message CommandResponse { repeated CommandResult results = 1; }
+
+message Device {
+  string device_id = 1;
+  string device_type = 2;
+  string status = 3;
+}
+
+message ListDevicesRequest {}
+message ListDevicesResponse { repeated Device devices = 1; }
