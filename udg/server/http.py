@@ -9,7 +9,9 @@ from udg.executor.runner import CommandExecutor
 from udg.utils.metrics import get_metrics
 from udg.server.mcp import mcp, init_mcp, get_mcp_app
 from udg.scanner.device_scanner import scan_all_devices
+from udg.scanner.serial_scanner import scan_serial_ports
 from datetime import datetime
+import urllib.parse
 
 device_manager = get_device_manager()
 executor = CommandExecutor(device_manager)
@@ -187,6 +189,91 @@ async def record(request: Request):
     if action == "stop":
         return await device_command(request, "stop_screenrecord", {})
     return await device_command(request, "screenrecord", {"path": body.get("path", "/sdcard/screen.mp4")})
+
+
+@app.get("/serial/ports")
+async def list_serial_ports(request: Request):
+    auth_error = await require_auth(request)
+    if auth_error:
+        return auth_error
+    ports = scan_serial_ports()
+    return {"ports": ports}
+
+
+async def serial_command(request: Request, command: str, params: dict):
+    auth_error = await require_auth(request)
+    if auth_error:
+        return auth_error
+    body = await request.json()
+    port = body.get("port")
+    if not port:
+        return JSONResponse({"detail": "port required"}, status_code=400)
+    device_id = f"serial-{urllib.parse.quote(port, safe='')}"
+    cmd = Command(
+        id=f"http-{datetime.now().timestamp()}",
+        device_id=device_id,
+        command=command,
+        params=params,
+        timeout_ms=body.get("timeout_ms", 30000)
+    )
+    results = await executor.execute_batch([cmd])
+    return {"status": results[0].status, "output": results[0].output, "error": results[0].error}
+
+
+@app.post("/serial/write")
+async def serial_write(request: Request):
+    body = await request.json()
+    return await serial_command(request, "write", {
+        "data": body.get("data", ""),
+        "read": body.get("read", False),
+        "encoding": body.get("encoding", "utf-8")
+    })
+
+
+@app.post("/serial/read")
+async def serial_read(request: Request):
+    body = await request.json()
+    return await serial_command(request, "read", {
+        "size": body.get("size", body.get("bytes", 1024))
+    })
+
+
+@app.post("/serial/config")
+async def serial_config_post(request: Request):
+    body = await request.json()
+    return await serial_command(request, "config", {
+        "baudrate": body.get("baudrate", 115200),
+        "parity": body.get("parity", "N"),
+        "databits": body.get("databits", 8),
+        "stopbits": body.get("stopbits", 1)
+    })
+
+
+@app.get("/serial/config")
+async def serial_config_get(request: Request):
+    auth_error = await require_auth(request)
+    if auth_error:
+        return auth_error
+    port = request.query_params.get("port")
+    if not port:
+        return JSONResponse({"detail": "port query parameter required"}, status_code=400)
+    device_id = f"serial-{urllib.parse.quote(port, safe='')}"
+    device = await device_manager.get_device(device_id)
+    if device:
+        return {
+            "port": port,
+            "baudrate": device.info.metadata.get("baudrate", 115200),
+            "parity": device.info.metadata.get("parity", "N"),
+            "databits": device.info.metadata.get("databits", 8),
+            "stopbits": device.info.metadata.get("stopbits", 1)
+        }
+    return {
+        "port": port,
+        "baudrate": 115200,
+        "parity": "N",
+        "databits": 8,
+        "stopbits": 1
+    }
 
 
 mcp_app = get_mcp_app()
