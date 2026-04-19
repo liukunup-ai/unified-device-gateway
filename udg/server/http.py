@@ -5,10 +5,14 @@ from udg.auth.token import validate_token
 from udg.config import settings
 from udg.device.manager import DeviceManager
 from udg.executor.runner import CommandExecutor
+from udg.utils.metrics import get_metrics
+from udg.server.mcp import router as mcp_router
 
 app = FastAPI()
 device_manager = DeviceManager()
 executor = CommandExecutor(device_manager)
+
+app.include_router(mcp_router)
 
 
 @app.get("/health")
@@ -24,6 +28,11 @@ async def ready():
 @app.get("/health/live")
 async def live():
     return {"status": "live"}
+
+
+@app.get("/metrics")
+async def metrics():
+    return get_metrics()
 
 
 @app.post("/api/v1/execute")
@@ -42,4 +51,8 @@ async def list_devices(authorization: Optional[str] = Header(None)):
     if not authorization or not authorization.startswith("Bearer "):
         raise HTTPException(status_code=401, detail="Unauthorized")
     devices = await device_manager.list_devices()
-    return DeviceListResponse(devices=[DeviceResponse(device_id=d.device_id, device_type=d.device_type.value, status=d.status.value) for d in devices])
+    return DeviceListResponse(devices=[DeviceResponse(
+        device_id=d.device_id,
+        device_type=d.device_type.value,
+        status=d.status.value
+    ) for d in devices])

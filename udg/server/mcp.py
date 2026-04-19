@@ -1,11 +1,11 @@
 from typing import Optional
-from fastapi import FastAPI, HTTPException, Header, Request
+from fastapi import APIRouter, Header, Request
 from sse_starlette.sse import EventSourceResponse
 
-app = FastAPI()
+router = APIRouter()
 
 
-@app.get("/mcp")
+@router.get("/mcp")
 async def mcp_endpoint(request: Request, authorization: Optional[str] = Header(None)):
     async def event_generator():
         yield {"event": "message", "data": '{"tools": []}'}
