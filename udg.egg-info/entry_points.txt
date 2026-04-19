@@ -1,0 +1,2 @@
+[console_scripts]
+udg = udg.__main__:main

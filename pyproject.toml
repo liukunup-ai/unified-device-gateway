@@ -1,0 +1,30 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "udg"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi",
+    "uvicorn",
+    "grpcio",
+    "grpcio-tools",
+    "mcp",
+    "pydantic",
+    "pydantic-settings",
+    "structlog",
+    "prometheus-client",
+    "redis",
+    "pyserial",
+    "pytest",
+    "pytest-asyncio",
+    "httpx",
+]
+
+[project.scripts]
+udg = "udg.__main__:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
