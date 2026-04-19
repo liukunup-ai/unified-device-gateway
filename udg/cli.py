@@ -138,6 +138,38 @@ def device():
     pass
 
 
+async def _run_serial_command(port: str, command: str, params: dict):
+    from udg.device.manager import get_device_manager
+    from udg.device.serial import SerialDevice
+    from udg.device.base import DeviceInfo, DeviceType, DeviceStatus
+    from udg.api.schemas import Command
+    from datetime import datetime
+    device_manager = get_device_manager()
+    info = DeviceInfo(
+        device_id=f"serial-{port}",
+        device_type=DeviceType.SERIAL,
+        serial_port=port,
+        status=DeviceStatus.ONLINE
+    )
+    device = SerialDevice(info)
+    await device.connect()
+    cmd = Command(
+        id=f"cli-{datetime.now().timestamp()}",
+        device_id=info.device_id,
+        command=command,
+        params=params,
+        timeout_ms=30000
+    )
+    result = await device.execute(cmd.command, cmd.params, cmd.timeout_ms)
+    await device.disconnect()
+    return result
+
+
+@click.group()
+def serial():
+    pass
+
+
 async def _run_device_command(device_id: str, command: str, params: dict):
     from udg.device.manager import get_device_manager
     from udg.api.schemas import Command
@@ -272,8 +304,65 @@ def device_record(device_id, path):
     _print_result(result)
 
 
+@serial.command(name="list")
+def serial_list():
+    """List available serial ports"""
+    from udg.scanner.serial_scanner import scan_serial_ports
+    ports = scan_serial_ports()
+    if not ports:
+        click.echo("No serial ports found")
+        return
+    for p in ports:
+        click.echo(f"{p['port']} serial offline")
+
+
+@serial.command(name="write")
+@click.argument("port")
+@click.argument("data")
+@click.option("--read/--no-read", default=False, help="Read response after write")
+@click.option("--encoding", default="utf-8", type=click.Choice(["utf-8", "base64"]), help="Data encoding")
+def serial_write(port, data, read, encoding):
+    """Write data to serial port"""
+    result = asyncio.run(_run_serial_command(port, "write", {"data": data, "read": read, "encoding": encoding}))
+    _print_result(result)
+
+
+@serial.command(name="read")
+@click.argument("port")
+@click.option("--bytes", "size", default=1024, help="Number of bytes to read")
+def serial_read(port, size):
+    """Read data from serial port"""
+    result = asyncio.run(_run_serial_command(port, "read", {"size": size}))
+    _print_result(result)
+
+
+@serial.command(name="config")
+@click.argument("port")
+@click.option("--baudrate", default=None, type=int, help="Baud rate")
+@click.option("--parity", default=None, type=click.Choice(["N", "E", "O"]), help="Parity (N=None, E=Even, O=Odd)")
+@click.option("--databits", default=None, type=int, help="Data bits (5, 6, 7, 8)")
+@click.option("--stopbits", default=None, type=int, help="Stop bits (1, 2)")
+def serial_config(port, baudrate, parity, databits, stopbits):
+    """Configure serial port parameters"""
+    params = {}
+    if baudrate is not None:
+        params["baudrate"] = baudrate
+    if parity is not None:
+        params["parity"] = parity
+    if databits is not None:
+        params["databits"] = databits
+    if stopbits is not None:
+        params["stopbits"] = stopbits
+    if not params:
+        click.echo("No configuration options provided")
+        return
+    result = asyncio.run(_run_serial_command(port, "config", params))
+    _print_result(result)
+
+
 cli.add_command(device)
 cli.add_command(token)
+cli.add_command(serial)
 
 if __name__ == "__main__":
     cli()
