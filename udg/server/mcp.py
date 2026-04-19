@@ -4,6 +4,7 @@ MCP (Model Context Protocol) server implementation.
 Uses FastMCP SDK to expose device management tools via MCP protocol.
 """
 import json
+import re
 from typing import Any
 from mcp.server.fastmcp import FastMCP
 from udg.device.base import DeviceType
@@ -163,6 +164,162 @@ async def screenshot(device_id: str) -> str:
             "error": str(e),
             "code": "SCREENSHOT_FAILED",
         })
+
+
+@mcp.tool()
+async def serial_write(port: str, data: str, read_response: bool = False, encoding: str = "utf-8") -> str:
+    """
+    Write data to serial port.
+
+    Args:
+        port: Serial port path (e.g., /dev/ttyUSB0)
+        data: Data to write
+        read_response: Whether to read response after write
+        encoding: Data encoding (utf-8 or base64)
+
+    Returns:
+        JSON object with write result.
+    """
+    from udg.api.schemas import Command
+    from datetime import datetime
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
+    cmd = Command(
+        id=f"mcp-{datetime.now().timestamp()}",
+        device_id=device_id,
+        command="write",
+        params={"data": data, "read": read_response, "encoding": encoding},
+        timeout_ms=5000
+    )
+
+    results = await _executor.execute_batch([cmd])
+    result = results[0]
+
+    return json.dumps({
+        "id": result.id,
+        "device_id": result.device_id,
+        "command": result.command,
+        "status": result.status,
+        "output": result.output,
+        "error": result.error,
+        "error_code": result.error_code,
+    }, indent=2)
+
+
+@mcp.tool()
+async def serial_read(port: str, bytes_to_read: int = 1024) -> str:
+    """
+    Read data from serial port.
+
+    Args:
+        port: Serial port path
+        bytes_to_read: Number of bytes to read (default 1024)
+
+    Returns:
+        JSON object with read result.
+    """
+    from udg.api.schemas import Command
+    from datetime import datetime
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
+    cmd = Command(
+        id=f"mcp-{datetime.now().timestamp()}",
+        device_id=device_id,
+        command="read",
+        params={"size": bytes_to_read},
+        timeout_ms=5000
+    )
+
+    results = await _executor.execute_batch([cmd])
+    result = results[0]
+
+    return json.dumps({
+        "id": result.id,
+        "device_id": result.device_id,
+        "command": result.command,
+        "status": result.status,
+        "output": result.output,
+        "error": result.error,
+        "error_code": result.error_code,
+    }, indent=2)
+
+
+@mcp.tool()
+async def serial_set_config(port: str, baudrate: int = 115200, parity: str = "N", databits: int = 8, stopbits: int = 1) -> str:
+    """
+    Configure serial port parameters.
+
+    Args:
+        port: Serial port path
+        baudrate: Baud rate (default 115200)
+        parity: Parity (N/E/O, default N)
+        databits: Data bits (5/6/7/8, default 8)
+        stopbits: Stop bits (1/1.5/2, default 1)
+
+    Returns:
+        JSON object with config result.
+    """
+    from udg.api.schemas import Command
+    from datetime import datetime
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
+    cmd = Command(
+        id=f"mcp-{datetime.now().timestamp()}",
+        device_id=device_id,
+        command="config",
+        params={"baudrate": baudrate, "parity": parity, "databits": databits, "stopbits": stopbits},
+        timeout_ms=5000
+    )
+
+    results = await _executor.execute_batch([cmd])
+    result = results[0]
+
+    return json.dumps({
+        "id": result.id,
+        "device_id": result.device_id,
+        "command": result.command,
+        "status": result.status,
+        "output": result.output,
+        "error": result.error,
+        "error_code": result.error_code,
+    }, indent=2)
+
+
+@mcp.tool()
+async def serial_get_config(port: str) -> str:
+    """
+    Get serial port configuration.
+
+    Args:
+        port: Serial port path
+
+    Returns:
+        JSON object with current configuration.
+    """
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+
+    safe_port = re.sub(r'[^a-zA-Z0-9_-]', '_', port)
+    device_id = f"serial-{safe_port}"
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+
+    from udg.device.serial import SerialDevice
+    if not isinstance(device, SerialDevice):
+        return json.dumps({"error": "Device is not a SerialDevice", "code": "INVALID_DEVICE_TYPE"})
+
+    return json.dumps({
+        "device_id": device_id,
+        "port": port,
+        "baudrate": device._baudrate,
+        "parity": device._parity,
+        "databits": device._databits,
+        "stopbits": device._stopbits,
+    }, indent=2)
 
 
 @mcp.resource("device://list")

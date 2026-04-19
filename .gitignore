@@ -19,6 +19,7 @@ wheels/
 *.egg-info/
 .installed.cfg
 *.egg
+udg.egg-info/
 
 # Virtual environments
 .venv/
@@ -56,3 +57,9 @@ metrics/
 # Protobuf generated
 **/device_pb2.py
 **/device_pb2_grpc.py
+
+# Sisyphus workflow
+.sisyphus/
+
+# Debug artifacts
+dump.xml

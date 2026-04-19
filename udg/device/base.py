@@ -1,19 +1,22 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 import asyncio
+
 
 class DeviceType(Enum):
     IOS = "ios"
     ANDROID = "android"
     SERIAL = "serial"
 
+
 class DeviceStatus(Enum):
     ONLINE = "online"
     OFFLINE = "offline"
     BUSY = "busy"
     ERROR = "error"
+
 
 @dataclass
 class DeviceInfo:

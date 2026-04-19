@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-from udg.api import device_pb2 as device__pb2
+from udg.api import device_pb2 as udg_dot_api_dot_device__pb2
 
 GRPC_GENERATED_VERSION = '1.80.0'
 GRPC_VERSION = grpc.__version__
@@ -18,7 +18,7 @@ except ImportError:
 if _version_not_supported:
     raise RuntimeError(
         f'The grpc package installed is at version {GRPC_VERSION},'
-        + ' but the generated code in device_pb2_grpc.py depends on'
+        + ' but the generated code in udg/api/device_pb2_grpc.py depends on'
         + f' grpcio>={GRPC_GENERATED_VERSION}.'
         + f' Please upgrade your grpc module to grpcio>={GRPC_GENERATED_VERSION}'
         + f' or downgrade your generated code using grpcio-tools<={GRPC_VERSION}.'
@@ -36,13 +36,38 @@ class DeviceGatewayStub(object):
         """
         self.Execute = channel.unary_unary(
                 '/udg.DeviceGateway/Execute',
-                request_serializer=device__pb2.CommandRequest.SerializeToString,
-                response_deserializer=device__pb2.CommandResponse.FromString,
+                request_serializer=udg_dot_api_dot_device__pb2.CommandRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.CommandResponse.FromString,
                 _registered_method=True)
         self.ListDevices = channel.unary_unary(
                 '/udg.DeviceGateway/ListDevices',
-                request_serializer=device__pb2.ListDevicesRequest.SerializeToString,
-                response_deserializer=device__pb2.ListDevicesResponse.FromString,
+                request_serializer=udg_dot_api_dot_device__pb2.ListDevicesRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.ListDevicesResponse.FromString,
+                _registered_method=True)
+        self.WriteSerial = channel.unary_unary(
+                '/udg.DeviceGateway/WriteSerial',
+                request_serializer=udg_dot_api_dot_device__pb2.SerialWriteRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.SerialWriteResponse.FromString,
+                _registered_method=True)
+        self.ReadSerial = channel.unary_unary(
+                '/udg.DeviceGateway/ReadSerial',
+                request_serializer=udg_dot_api_dot_device__pb2.SerialReadRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.SerialReadResponse.FromString,
+                _registered_method=True)
+        self.SetSerialConfig = channel.unary_unary(
+                '/udg.DeviceGateway/SetSerialConfig',
+                request_serializer=udg_dot_api_dot_device__pb2.SerialConfigRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.SerialConfigResponse.FromString,
+                _registered_method=True)
+        self.GetSerialConfig = channel.unary_unary(
+                '/udg.DeviceGateway/GetSerialConfig',
+                request_serializer=udg_dot_api_dot_device__pb2.SerialConfigRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.SerialConfigResponse.FromString,
+                _registered_method=True)
+        self.ListSerialPorts = channel.unary_unary(
+                '/udg.DeviceGateway/ListSerialPorts',
+                request_serializer=udg_dot_api_dot_device__pb2.ListSerialPortsRequest.SerializeToString,
+                response_deserializer=udg_dot_api_dot_device__pb2.ListSerialPortsResponse.FromString,
                 _registered_method=True)
 
 
@@ -61,18 +86,73 @@ class DeviceGatewayServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def WriteSerial(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ReadSerial(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def SetSerialConfig(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetSerialConfig(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def ListSerialPorts(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_DeviceGatewayServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'Execute': grpc.unary_unary_rpc_method_handler(
                     servicer.Execute,
-                    request_deserializer=device__pb2.CommandRequest.FromString,
-                    response_serializer=device__pb2.CommandResponse.SerializeToString,
+                    request_deserializer=udg_dot_api_dot_device__pb2.CommandRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.CommandResponse.SerializeToString,
             ),
             'ListDevices': grpc.unary_unary_rpc_method_handler(
                     servicer.ListDevices,
-                    request_deserializer=device__pb2.ListDevicesRequest.FromString,
-                    response_serializer=device__pb2.ListDevicesResponse.SerializeToString,
+                    request_deserializer=udg_dot_api_dot_device__pb2.ListDevicesRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.ListDevicesResponse.SerializeToString,
+            ),
+            'WriteSerial': grpc.unary_unary_rpc_method_handler(
+                    servicer.WriteSerial,
+                    request_deserializer=udg_dot_api_dot_device__pb2.SerialWriteRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.SerialWriteResponse.SerializeToString,
+            ),
+            'ReadSerial': grpc.unary_unary_rpc_method_handler(
+                    servicer.ReadSerial,
+                    request_deserializer=udg_dot_api_dot_device__pb2.SerialReadRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.SerialReadResponse.SerializeToString,
+            ),
+            'SetSerialConfig': grpc.unary_unary_rpc_method_handler(
+                    servicer.SetSerialConfig,
+                    request_deserializer=udg_dot_api_dot_device__pb2.SerialConfigRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.SerialConfigResponse.SerializeToString,
+            ),
+            'GetSerialConfig': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetSerialConfig,
+                    request_deserializer=udg_dot_api_dot_device__pb2.SerialConfigRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.SerialConfigResponse.SerializeToString,
+            ),
+            'ListSerialPorts': grpc.unary_unary_rpc_method_handler(
+                    servicer.ListSerialPorts,
+                    request_deserializer=udg_dot_api_dot_device__pb2.ListSerialPortsRequest.FromString,
+                    response_serializer=udg_dot_api_dot_device__pb2.ListSerialPortsResponse.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -100,8 +180,8 @@ class DeviceGateway(object):
             request,
             target,
             '/udg.DeviceGateway/Execute',
-            device__pb2.CommandRequest.SerializeToString,
-            device__pb2.CommandResponse.FromString,
+            udg_dot_api_dot_device__pb2.CommandRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.CommandResponse.FromString,
             options,
             channel_credentials,
             insecure,
@@ -127,8 +207,143 @@ class DeviceGateway(object):
             request,
             target,
             '/udg.DeviceGateway/ListDevices',
-            device__pb2.ListDevicesRequest.SerializeToString,
-            device__pb2.ListDevicesResponse.FromString,
+            udg_dot_api_dot_device__pb2.ListDevicesRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.ListDevicesResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def WriteSerial(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/udg.DeviceGateway/WriteSerial',
+            udg_dot_api_dot_device__pb2.SerialWriteRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.SerialWriteResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ReadSerial(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/udg.DeviceGateway/ReadSerial',
+            udg_dot_api_dot_device__pb2.SerialReadRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.SerialReadResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SetSerialConfig(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/udg.DeviceGateway/SetSerialConfig',
+            udg_dot_api_dot_device__pb2.SerialConfigRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.SerialConfigResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetSerialConfig(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/udg.DeviceGateway/GetSerialConfig',
+            udg_dot_api_dot_device__pb2.SerialConfigRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.SerialConfigResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def ListSerialPorts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/udg.DeviceGateway/ListSerialPorts',
+            udg_dot_api_dot_device__pb2.ListSerialPortsRequest.SerializeToString,
+            udg_dot_api_dot_device__pb2.ListSerialPortsResponse.FromString,
             options,
             channel_credentials,
             insecure,
