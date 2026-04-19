@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+grpcio
+grpcio-tools
+mcp
+pydantic
+pydantic-settings
+structlog
+prometheus-client
+redis
+pyserial
+pytest
+pytest-asyncio
+httpx
