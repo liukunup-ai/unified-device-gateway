@@ -47,6 +47,9 @@ udg start
 # 状态
 udg status
 
+# 查看 token
+cat ~/.udg/token
+
 # 轮换 token
 udg token rotate
 ```

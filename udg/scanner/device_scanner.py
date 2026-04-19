@@ -51,7 +51,7 @@ async def scan_all_devices(device_manager: DeviceManager) -> None:
     for info in ios_devices:
         from udg.device.base import DeviceInfo, DeviceStatus
         device = IOSDevice(DeviceInfo(
-            device_id=info["udid"][:8],
+            device_id=info["udid"],
             device_type=DeviceType.IOS,
             status=DeviceStatus.ONLINE,
             udid=info["udid"],

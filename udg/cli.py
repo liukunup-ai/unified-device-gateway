@@ -1,6 +1,8 @@
 import asyncio
 import click
+import socket
 from udg import __version__
+from udg.config import settings
 
 
 @click.group()
@@ -14,10 +16,114 @@ def version():
 
 
 @cli.command()
+def help():
+    """Show help information"""
+    click.echo("""
+Unified Device Gateway (UDG) - 统一设备网关
+
+Usage: udg [COMMAND] [OPTIONS]
+
+Commands:
+  start           Start the UDG server
+  token           Manage authentication token
+  status          Show server status
+  device          Device management commands
+
+Token Commands:
+  udg token show          Show current token
+  udg token rotate        Rotate to a new token
+
+Device Commands:
+  udg device list          List all connected devices
+  udg device push          Push file to device
+  udg device pull          Pull file from device
+  udg device apps          List installed apps
+  udg device install       Install app
+  udg device uninstall     Uninstall app
+  udg device launch        Launch app
+  udg device stop          Stop app
+  udg device battery       Get battery status
+  udg device current-app   Get current app
+  udg device tap           Tap screen coordinates
+  udg device swipe         Swipe screen
+  udg device screenshot    Take screenshot
+  udg device record        Record screen
+
+Run 'udg device COMMAND --help' for more information on a command.
+""")
+
+
+@cli.command()
+def status():
+    """Show server status"""
+    from udg.device.manager import get_device_manager
+
+    http_listening = _is_port_open("127.0.0.1", settings.http_port)
+    grpc_listening = _is_port_open("127.0.0.1", settings.grpc_port)
+
+    device_manager = get_device_manager()
+    devices = asyncio.run(device_manager.list_devices())
+
+    click.echo("UDG Server Status")
+    click.echo("=" * 40)
+    click.echo(f"HTTP Server:     {'✓ Running' if http_listening else '✗ Not running'} (port {settings.http_port})")
+    click.echo(f"gRPC Server:     {'✓ Running' if grpc_listening else '✗ Not running'} (port {settings.grpc_port})")
+    click.echo(f"Devices:         {len(devices)} connected")
+    click.echo(f"Token file:      {settings.token_file}")
+
+
+def _is_port_open(host: str, port: int) -> bool:
+    try:
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.settimeout(1)
+        result = sock.connect_ex((host, port))
+        sock.close()
+        return result == 0
+    except Exception:
+        return False
+
+
+@click.group()
+def token():
+    """Manage authentication token"""
+    pass
+
+
+@token.command(name="show")
+def token_show():
+    """Show current authentication token"""
+    from udg.auth.token import load_token
+    token = load_token(settings.token_file)
+    click.echo(token)
+
+
+@token.command(name="rotate")
+def token_rotate():
+    """Rotate to a new authentication token"""
+    from udg.auth.token import rotate_token, load_token
+    new_token = rotate_token(settings.token_file)
+    click.echo(f"Token rotated successfully. New token: {new_token}")
+
+
+@cli.command()
 def start():
-    click.echo("Starting udg server...")
+    click.echo("Starting UDG server...")
     from udg.server.app import main as server_main
     asyncio.run(server_main())
+
+
+@cli.command(name="list")
+def list_devices():
+    from udg.device.manager import get_device_manager
+    from udg.scanner.device_scanner import scan_all_devices
+    device_manager = get_device_manager()
+    asyncio.run(scan_all_devices(device_manager))
+    devices = asyncio.run(device_manager.list_devices())
+    if not devices:
+        click.echo("No devices found")
+        return
+    for d in devices:
+        click.echo(f"- {d.device_id} {d.device_type.value} {d.status.value}")
 
 
 @click.group()
@@ -51,20 +157,6 @@ def _print_result(result: dict):
         click.echo(result["output"] or "OK")
     else:
         click.echo(f"Error: {result['error']}", err=True)
-
-
-@device.command(name="list")
-def device_list():
-    from udg.device.manager import get_device_manager
-    from udg.scanner.device_scanner import scan_all_devices
-    device_manager = get_device_manager()
-    asyncio.run(scan_all_devices(device_manager))
-    devices = asyncio.run(device_manager.list_devices())
-    if not devices:
-        click.echo("No devices found")
-        return
-    for d in devices:
-        click.echo(f"- {d.device_id} ({d.device_type.value}): {d.status.value}")
 
 
 @device.command(name="push")
@@ -174,6 +266,7 @@ def device_record(device_id, path):
 
 
 cli.add_command(device)
+cli.add_command(token)
 
 if __name__ == "__main__":
     cli()
