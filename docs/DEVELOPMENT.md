@@ -27,6 +27,7 @@ git clone https://github.com/your-repo/unified-device-gateway.git
 cd unified-device-gateway
 
 # 使用 uv 安装
+uv venv
 uv pip install -e .
 ```
 
