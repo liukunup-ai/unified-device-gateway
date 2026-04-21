@@ -15,10 +15,9 @@ class IOSDevice(BaseDevice):
         self._wda_url: Optional[str] = None
 
     async def connect(self) -> None:
+        cmd = ["ios", "list", "--details"]
         if self.info.udid:
-            cmd = ["tidevice", "-u", self.info.udid, "list"]
-        else:
-            cmd = ["tidevice", "list"]
+            cmd = ["ios", "--udid=" + self.info.udid, "list", "--details"]
         result = await asyncio.create_subprocess_exec(
             *cmd,
             stdout=asyncio.subprocess.PIPE,
@@ -26,7 +25,7 @@ class IOSDevice(BaseDevice):
         )
         stdout, stderr = await result.communicate()
         if result.returncode != 0:
-            raise RuntimeError(f"tidevice failed: {stderr.decode()}")
+            raise RuntimeError(f"go-ios failed: {stderr.decode()}")
         self._connected = True
 
     async def disconnect(self) -> None:
@@ -74,6 +73,18 @@ class IOSDevice(BaseDevice):
                     return await self._screenrecord(params.get("local_path", "/tmp/screen.mp4"))
                 elif command == "stop_screenrecord":
                     return await self._stop_screenrecord()
+                elif command == "get_ip":
+                    return await self._get_ip()
+                elif command == "dump_ui":
+                    return await self._dump_ui()
+                elif command == "click_by_text":
+                    return await self._click_by_text(params.get("text", ""))
+                elif command == "input_text":
+                    return await self._input_text(params.get("text", ""))
+                elif command == "handle_alert":
+                    return await self._handle_alert(params.get("action", "accept"))
+                elif command == "assert_text":
+                    return await self._assert_text(params.get("text", ""))
                 else:
                     return {"status": "error", "error": "UNKNOWN_COMMAND", "output": None}
         except asyncio.TimeoutError:
@@ -82,9 +93,9 @@ class IOSDevice(BaseDevice):
             return {"status": "error", "error": str(e), "output": None}
 
     async def _shell(self, cmd: str) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         result = await asyncio.create_subprocess_exec(
-            "tidevice", *udid_arg, "shell", cmd,
+            "ios", *udid_arg, "shell", cmd,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -102,7 +113,7 @@ class IOSDevice(BaseDevice):
             port = 8100
             if self.info.udid:
                 result = await asyncio.create_subprocess_exec(
-                    "tidevice", "-u", self.info.udid, "wda", "-p", str(port),
+                    "ios", "--udid=" + self.info.udid, "runwda",
                     stdout=asyncio.subprocess.PIPE,
                     stderr=asyncio.subprocess.PIPE
                 )
@@ -136,9 +147,9 @@ class IOSDevice(BaseDevice):
         return {"status": "success", "output": stdout.decode(), "error": None}
 
     async def _screenshot(self) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         result = await asyncio.create_subprocess_exec(
-            "tidevice", *udid_arg, " screenshot",
+            "ios", *udid_arg, "screenshot",
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -149,9 +160,9 @@ class IOSDevice(BaseDevice):
         return {"status": "success", "output": f"data:image/png;base64,{b64}", "error": None}
 
     async def _install(self, path: str) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         result = await asyncio.create_subprocess_exec(
-            "tidevice", *udid_arg, "install", path,
+            "ios", *udid_arg, "install", "--path=" + path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -161,9 +172,10 @@ class IOSDevice(BaseDevice):
         return {"status": "success", "output": stdout.decode(), "error": None}
 
     async def _push(self, local_path: str, remote_path: str) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         result = await asyncio.create_subprocess_exec(
-            "ios", *udid_arg, "push", local_path, remote_path,
+            "ios", *udid_arg, "file", "push",
+            "--local=" + local_path, "--remote=" + remote_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -173,9 +185,10 @@ class IOSDevice(BaseDevice):
         return {"status": "success", "output": stdout.decode(), "error": None}
 
     async def _pull(self, remote_path: str, local_path: str) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         result = await asyncio.create_subprocess_exec(
-            "ios", *udid_arg, "pull", remote_path, local_path,
+            "ios", *udid_arg, "file", "pull",
+            "--remote=" + remote_path, "--local=" + local_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -189,7 +202,7 @@ class IOSDevice(BaseDevice):
         return result
 
     async def _uninstall(self, bundle_id: str) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         result = await asyncio.create_subprocess_exec(
             "ios", *udid_arg, "uninstall", bundle_id,
             stdout=asyncio.subprocess.PIPE,
@@ -221,11 +234,11 @@ class IOSDevice(BaseDevice):
         return result
 
     async def _get_current_app(self) -> dict:
-        result = await self._wda_command({"method": "GET", "path": "/wda/activeElementInfo"})
+        result = await self._wda_command({"method": "GET", "path": "/wda/activeAppInfo"})
         if result.get("status") == "success":
             try:
                 info = json.loads(result.get("output", "{}"))
-                bundle_id = info.get("contentTree", {}).get("bundleId", "unknown")
+                bundle_id = info.get("bundleId", "unknown")
                 return {"status": "success", "output": bundle_id, "error": None}
             except:
                 pass
@@ -243,16 +256,19 @@ class IOSDevice(BaseDevice):
         result = await self._wda_command({
             "method": "POST",
             "path": "/wda/touch/perform",
-            "body": {"actions": [{"action": "press", "x": x1, "y": y1},
-                                  {"action": "moveTo", "x": x2, "y": y2},
-                                  {"action": "release"}]}
+            "body": {"actions": [
+                {"action": "press", "x": x1, "y": y1},
+                {"action": "wait", "ms": duration},
+                {"action": "moveTo", "x": x2, "y": y2},
+                {"action": "release"}
+            ]}
         })
         return result
 
     async def _screenrecord(self, local_path: str) -> dict:
-        udid_arg = ["-u", self.info.udid] if self.info.udid else []
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
         proc = await asyncio.create_subprocess_exec(
-            "ios", *udid_arg, "recordVideo", local_path,
+            "ios", *udid_arg, "recordVideo", "--output=" + local_path,
             stdout=asyncio.subprocess.PIPE,
             stderr=asyncio.subprocess.PIPE
         )
@@ -265,3 +281,50 @@ class IOSDevice(BaseDevice):
             await self._screenrecord_proc.wait()
             self._screenrecord_proc = None
         return {"status": "success", "output": "Recording stopped", "error": None}
+
+    async def _get_ip(self) -> dict:
+        udid_arg = ["--udid=" + self.info.udid] if self.info.udid else []
+        result = await asyncio.create_subprocess_exec(
+            "ios", *udid_arg, "diag", "--network",
+            stdout=asyncio.subprocess.PIPE,
+            stderr=asyncio.subprocess.PIPE
+        )
+        stdout, stderr = await result.communicate()
+        if result.returncode != 0:
+            return {"status": "error", "error": stderr.decode(), "output": None}
+        return {"status": "success", "output": stdout.decode(), "error": None}
+
+    async def _dump_ui(self) -> dict:
+        result = await self._wda_command({"method": "GET", "path": "/wda/source"})
+        return result
+
+    async def _click_by_text(self, text: str) -> dict:
+        result = await self._wda_command({
+            "method": "POST",
+            "path": "/wda/element/text",
+            "body": {"text": text}
+        })
+        return result
+
+    async def _input_text(self, text: str) -> dict:
+        result = await self._wda_command({
+            "method": "POST",
+            "path": "/wda/element/focused/setValue",
+            "body": {"value": text}
+        })
+        return result
+
+    async def _handle_alert(self, action: str = "accept") -> dict:
+        if action == "dismiss":
+            result = await self._wda_command({"method": "POST", "path": "/wda/alert/dismiss"})
+        else:
+            result = await self._wda_command({"method": "POST", "path": "/wda/alert/accept"})
+        return result
+
+    async def _assert_text(self, text: str) -> dict:
+        result = await self._wda_command({
+            "method": "POST",
+            "path": "/wda/element/text/exists",
+            "body": {"text": text}
+        })
+        return result

@@ -10,6 +10,7 @@ class AndroidDevice(BaseDevice):
     def __init__(self, info: DeviceInfo):
         super().__init__(info)
         self._adb: Optional[CmdRunner] = None
+        self._u2 = None
 
     def _get_adb(self) -> CmdRunner:
         if self._adb:
@@ -21,6 +22,17 @@ class AndroidDevice(BaseDevice):
         else:
             self._adb = CmdRunner("adb")
         return self._adb
+
+    def _get_u2(self):
+        if self._u2 is None:
+            import uiautomator2 as u2
+            if self.info.serial:
+                self._u2 = u2.connect(self.info.serial)
+            elif self.info.ip_port:
+                self._u2 = u2.connect(self.info.ip_port)
+            else:
+                self._u2 = u2.connect()
+        return self._u2
 
     async def connect(self) -> None:
         result = await self._get_adb().run("get-state")
@@ -69,6 +81,20 @@ class AndroidDevice(BaseDevice):
                     return await self._screenrecord(params.get("remote_path", "/sdcard/screen.mp4"))
                 elif command == "stop_screenrecord":
                     return await self._stop_screenrecord()
+                elif command == "get_ip":
+                    return await self._get_ip()
+                elif command == "press":
+                    return await self._press(params.get("key", "home"))
+                elif command == "input_text":
+                    return await self._input_text(params.get("text", ""))
+                elif command == "click_by_text":
+                    return await self._click_by_text(params.get("text", ""))
+                elif command == "handle_alert":
+                    return await self._handle_alert(params.get("action", "accept"))
+                elif command == "assert_text":
+                    return await self._assert_text(params.get("text", ""), params.get("timeout", 5))
+                elif command == "dump_ui":
+                    return await self._uiautomator({"method": "dump"})
                 else:
                     return {"status": "error", "error": "UNKNOWN_COMMAND", "output": None}
         except asyncio.TimeoutError:
@@ -193,3 +219,70 @@ class AndroidDevice(BaseDevice):
             if result.code != 0:
                 return {"status": "error", "output": None, "error": result.stderr}
             return {"status": "success", "output": result.stdout, "error": None}
+
+    async def _get_ip(self) -> dict:
+        result = await self._get_adb().run("shell", "ifconfig", "wlan0")
+        if result.code != 0:
+            result = await self._get_adb().run("shell", "ifconfig")
+            if result.code != 0:
+                return {"status": "error", "output": None, "error": result.stderr}
+        return {"status": "success", "output": result.stdout, "error": None}
+
+    async def _press(self, key: str) -> dict:
+        key_map = {
+            "home": "KEYCODE_HOME",
+            "back": "KEYCODE_BACK",
+            "volup": "KEYCODE_VOLUME_UP",
+            "voldown": "KEYCODE_VOLUME_DOWN",
+            "power": "KEYCODE_POWER",
+            "up": "KEYCODE_DPAD_UP",
+            "down": "KEYCODE_DPAD_DOWN",
+            "left": "KEYCODE_DPAD_LEFT",
+            "right": "KEYCODE_DPAD_RIGHT",
+            "enter": "KEYCODE_ENTER",
+        }
+        android_key = key_map.get(key.lower(), key.upper())
+        result = await self._get_adb().run("shell", "input", "keyevent", android_key)
+        if result.code != 0:
+            return {"status": "error", "output": None, "error": result.stderr}
+        return {"status": "success", "output": "pressed", "error": None}
+
+    async def _input_text(self, text: str) -> dict:
+        result = await self._get_adb().run("shell", "input", "text", text)
+        if result.code != 0:
+            return {"status": "error", "output": None, "error": result.stderr}
+        return {"status": "success", "output": "text input", "error": None}
+
+    async def _click_by_text(self, text: str) -> dict:
+        loop = asyncio.get_event_loop()
+        try:
+            d = await loop.run_in_executor(None, self._get_u2)
+            await loop.run_in_executor(None, lambda: d(text=text).click())
+            return {"status": "success", "output": f"clicked by text: {text}", "error": None}
+        except Exception as e:
+            return {"status": "error", "output": None, "error": str(e)}
+
+    async def _handle_alert(self, action: str = "accept") -> dict:
+        loop = asyncio.get_event_loop()
+        try:
+            d = await loop.run_in_executor(None, self._get_u2)
+            if action == "dismiss":
+                await loop.run_in_executor(None, lambda: d.alert.dismiss())
+            else:
+                await loop.run_in_executor(None, lambda: d.alert.accept())
+            return {"status": "success", "output": f"alert {action}ed", "error": None}
+        except Exception as e:
+            return {"status": "error", "output": None, "error": str(e)}
+
+    async def _assert_text(self, text: str, timeout: int = 5) -> dict:
+        loop = asyncio.get_event_loop()
+        try:
+            d = await loop.run_in_executor(None, self._get_u2)
+            ele = d(text=text)
+            exists = await loop.run_in_executor(None, ele.exists)
+            if exists:
+                return {"status": "success", "output": f"text found: {text}", "error": None}
+            else:
+                return {"status": "error", "output": None, "error": f"text not found: {text}"}
+        except Exception as e:
+            return {"status": "error", "output": None, "error": str(e)}

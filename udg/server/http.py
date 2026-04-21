@@ -182,6 +182,46 @@ async def screenshot(request: Request):
     return await device_command(request, "screenshot", {})
 
 
+@app.get("/ip")
+async def get_ip(request: Request):
+    return await device_command(request, "get_ip", {})
+
+
+@app.get("/ui/xml")
+async def dump_ui(request: Request):
+    return await device_command(request, "dump_ui", {})
+
+
+@app.post("/press")
+async def press(request: Request):
+    body = await request.json()
+    return await device_command(request, "press", {"key": body.get("key", "home")})
+
+
+@app.post("/click-by-text")
+async def click_by_text(request: Request):
+    body = await request.json()
+    return await device_command(request, "click_by_text", {"text": body.get("text", "")})
+
+
+@app.post("/input")
+async def input_text(request: Request):
+    body = await request.json()
+    return await device_command(request, "input_text", {"text": body.get("text", "")})
+
+
+@app.post("/alert")
+async def handle_alert(request: Request):
+    body = await request.json()
+    return await device_command(request, "handle_alert", {"action": body.get("action", "accept")})
+
+
+@app.post("/assert/text")
+async def assert_text(request: Request):
+    body = await request.json()
+    return await device_command(request, "assert_text", {"text": body.get("expected", "")})
+
+
 @app.post("/record")
 async def record(request: Request):
     body = await request.json()

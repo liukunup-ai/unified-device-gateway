@@ -322,6 +322,118 @@ async def serial_get_config(port: str) -> str:
     }, indent=2)
 
 
+@mcp.tool()
+async def get_ip(device_id: str) -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("get_ip", {}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def dump_ui(device_id: str) -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("dump_ui", {}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def click_by_text(device_id: str, text: str) -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("click_by_text", {"text": text}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def input_text_tool(device_id: str, text: str) -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("input_text", {"text": text}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def handle_alert(device_id: str, action: str = "accept") -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("handle_alert", {"action": action}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def assert_text(device_id: str, text: str) -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("assert_text", {"text": text}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def press(device_id: str, key: str = "home") -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("press", {"key": key}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
+@mcp.tool()
+async def dump_ui_xml(device_id: str) -> str:
+    if _device_manager is None:
+        return json.dumps({"error": "Device manager not initialized"})
+    device = await _device_manager.get_device(device_id)
+    if not device:
+        return json.dumps({"error": f"Device {device_id} not found", "code": "NOT_FOUND"})
+    try:
+        result = await device.execute("dump_ui", {}, 30000)
+        return json.dumps({"device_id": device_id, "status": result.get("status"), "output": result.get("output")})
+    except Exception as e:
+        return json.dumps({"device_id": device_id, "status": "error", "error": str(e)})
+
+
 @mcp.resource("device://list")
 async def device_list_resource() -> str:
     """

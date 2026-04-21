@@ -8,6 +8,7 @@ import asyncio
 class DeviceType(Enum):
     IOS = "ios"
     ANDROID = "android"
+    HARMONYOS = "harmonyos"
     SERIAL = "serial"
 
 
