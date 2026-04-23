@@ -21,6 +21,7 @@ dependencies = [
     "pytest",
     "pytest-asyncio",
     "httpx",
+    "uiautomator2",
 ]
 
 [project.scripts]
